@@ -37,21 +37,22 @@ query = st.text_input("Masukkan nama makanan (gunakan Bahasa Inggris)", "apple")
 
 if st.button("Cari Informasi Nutrisi"):
     with st.spinner("Mengambil data dari USDA..."):
-        params = {
-            "api_key": API_KEY,
-            "query": query,
-            "pageSize": 1
-        }
-        response = requests.get(API_URL, params=params)
-
-        if response.status_code == 200:
+        try:
+            params = {
+                "api_key": API_KEY,
+                "query": query,
+                "pageSize": 1
+            }
+            response = requests.get(API_URL, params=params)
+            response.raise_for_status()
             data = response.json()
-            if data["foods"]:
+
+            if "foods" in data and len(data["foods"]) > 0:
                 food = data["foods"][0]
                 st.success(f"Data nutrisi untuk: {food['description']}")
 
                 # Buat dictionary nutrisi
-                nutrients = {item['nutrientName']: item['value'] for item in food['foodNutrients']}
+                nutrients = {item.get('nutrientName'): item.get('value', 0) for item in food.get('foodNutrients', [])}
 
                 # Ambil nutrisi penting
                 nutrition_info = {
@@ -73,8 +74,11 @@ if st.button("Cari Informasi Nutrisi"):
                 st.bar_chart(df)
             else:
                 st.warning("Makanan tidak ditemukan di database USDA.")
-        else:
-            st.error("Terjadi kesalahan saat mengambil data. Silakan coba lagi nanti.")
+
+        except requests.exceptions.RequestException as e:
+            st.error(f"Terjadi kesalahan saat menghubungi API USDA: {e}")
+        except Exception as e:
+            st.error(f"Terjadi kesalahan tidak terduga: {e}")
 
 # Footer
 st.markdown("---")
