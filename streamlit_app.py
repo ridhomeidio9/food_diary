@@ -1,104 +1,41 @@
-import streamlit as st
-import requests
-import plotly.graph_objs as go
+st.title("🍽️ Analisis Nutrisi Makanan")
+st.write("Pilih makanan untuk melihat informasi gizinya (kalori, karbohidrat, protein, dan gula).")
 
-# ---------------------------
-# Konfigurasi API Edamam
-APP_ID = "your_app_id"
-APP_KEY = "your_app_key"
-API_URL = "https://api.edamam.com/api/nutrition-data"
+# Data Nutrisi Contoh
+nutrisi_makanan = {
+    "Nasi Putih (100g)": {"Kalori": 130, "Karbohidrat": 28, "Protein": 2.7, "Gula": 0.1},
+    "Ayam Goreng (100g)": {"Kalori": 239, "Karbohidrat": 0, "Protein": 27, "Gula": 0},
+    "Tahu Goreng (100g)": {"Kalori": 271, "Karbohidrat": 9.2, "Protein": 14, "Gula": 0.6},
+    "Tempe Goreng (100g)": {"Kalori": 200, "Karbohidrat": 7.7, "Protein": 18, "Gula": 0},
+    "Telur Rebus (1 butir)": {"Kalori": 68, "Karbohidrat": 0.6, "Protein": 5.5, "Gula": 0.5},
+    "Apel (100g)": {"Kalori": 52, "Karbohidrat": 14, "Protein": 0.3, "Gula": 10},
+    "Pisang (100g)": {"Kalori": 89, "Karbohidrat": 23, "Protein": 1.1, "Gula": 12},
+    "Susu Full Cream (100ml)": {"Kalori": 61, "Karbohidrat": 4.8, "Protein": 3.2, "Gula": 5.1}
+}
 
-# ---------------------------
-st.set_page_config(page_title="Analisis Nutrisi Makanan", layout="centered")
+# Dropdown untuk memilih makanan
+makanan_dipilih = st.selectbox("Pilih Makanan", list(nutrisi_makanan.keys()))
 
-st.markdown(
-    """
-    <style>
-    .main {
-        background-color: #f0f2f6;
-    }
-    .title {
-        font-size: 36px;
-        color: #4a4a4a;
-        text-align: center;
-        font-weight: bold;
-    }
-    .subtitle {
-        font-size: 20px;
-        color: #6c757d;
-        text-align: center;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+# Tampilkan hasil analisis
+if makanan_dipilih:
+    st.subheader(f"📊 Informasi Gizi: {makanan_dipilih}")
+    gizi = nutrisi_makanan[makanan_dipilih]
+    st.metric("Kalori (kkal)", gizi["Kalori"])
+    st.metric("Karbohidrat (g)", gizi["Karbohidrat"])
+    st.metric("Protein (g)", gizi["Protein"])
+    st.metric("Gula (g)", gizi["Gula"])
 
-st.markdown('<div class="title">🔍 Analisis Nutrisi Makanan</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Masukkan makanan dan lihat informasi gizi secara langsung!</div>', unsafe_allow_html=True)
-st.write("")
+    # Visualisasi pie chart
+    st.subheader("🍥 Komposisi Gizi")
+    st.pyplot(
+        figure=__import__('matplotlib.pyplot').pie(
+            [gizi["Karbohidrat"], gizi["Protein"], gizi["Gula"]],
+            labels=["Karbohidrat", "Protein", "Gula"],
+            autopct="%1.1f%%",
+            startangle=140
+        )[0].figure
+    )
 
-# ---------------------------
-makanan_input = st.text_input("🍽 Masukkan makanan (contoh: 1 cup nasi, 2 telur rebus):", "")
-
-if st.button("Analisis"):
-    if not makanan_input:
-        st.warning("Silakan masukkan deskripsi makanan terlebih dahulu.")
-    else:
-        with st.spinner("Menganalisis makanan..."):
-            params = {
-                "app_id": APP_ID,
-                "app_key": APP_KEY,
-                "ingr": makanan_input
-            }
-            response = requests.get(API_URL, params=params)
-
-            if response.status_code == 200:
-                data = response.json()
-
-                calories = data.get("calories", 0)
-                total_weight = data.get("totalWeight", 0)
-                nutrients = data.get("totalNutrients", {})
-
-                protein = nutrients.get("PROCNT", {}).get("quantity", 0)
-                carbs = nutrients.get("CHOCDF", {}).get("quantity", 0)
-                fat = nutrients.get("FAT", {}).get("quantity", 0)
-
-                st.success("✅ Analisis selesai!")
-
-                st.subheader("📊 Rincian Nutrisi")
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    st.metric(label="Kalori", value=f"{calories:.2f} kcal")
-                    st.metric(label="Berat Total", value=f"{total_weight:.2f} g")
-                    st.metric(label="Protein", value=f"{protein:.2f} g")
-                
-                with col2:
-                    st.metric(label="Karbohidrat", value=f"{carbs:.2f} g")
-                    st.metric(label="Lemak", value=f"{fat:.2f} g")
-
-                # ---------------------------
-                # Visualisasi Pie Chart
-                st.subheader("📈 Komposisi Nutrisi Utama (Pie Chart)")
-                pie = go.Figure(data=[go.Pie(
-                    labels=['Protein', 'Karbohidrat', 'Lemak'],
-                    values=[protein, carbs, fat],
-                    hole=.4,
-                    marker=dict(colors=['#00cc96', '#636efa', '#ef553b'])
-                )])
-                pie.update_layout(height=400, showlegend=True)
-                st.plotly_chart(pie)
-
-                # ---------------------------
-                # Visualisasi Bar Chart
-                st.subheader("📉 Grafik Batang Nutrisi")
-                bar = go.Figure(data=[
-                    go.Bar(name="Protein", x=["Protein"], y=[protein], marker_color="#00cc96"),
-                    go.Bar(name="Karbohidrat", x=["Karbohidrat"], y=[carbs], marker_color="#636efa"),
-                    go.Bar(name="Lemak", x=["Lemak"], y=[fat], marker_color="#ef553b"),
-                ])
-                bar.update_layout(barmode='group')
-                st.plotly_chart(bar)
-
-            else:
-                st.error("❌ Gagal mengambil data nutrisi. Periksa input atau kredensial API Anda.")
+# Footer
+st.markdown("---")
+st.caption("Dibuat oleh Mahasiswa Jurusan Pangan | Streamlit Nutrisi App 2025")
