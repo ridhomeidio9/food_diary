@@ -8,7 +8,7 @@ API_KEY = "YOUR_USDA_API_KEY"
 API_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 
 # Styling
-st.set_page_config(page_title="Food Nutrition Analyzer", layout="wide")
+st.set_page_config(page_title="Analisis Nutrisi Makanan", layout="wide")
 st.markdown("""
     <style>
         .main {
@@ -28,14 +28,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Header
-st.markdown("<div class='title'>🥗 Food Nutrition Analyzer</div>", unsafe_allow_html=True)
+st.markdown("<div class='title'>🥗 Analisis Nutrisi Makanan</div>", unsafe_allow_html=True)
 st.write("\n")
-st.markdown("<div class='sub-header'>Masukkan makanan yang ingin kamu analisis nutrisinya berdasarkan data dari USDA.</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-header'>Masukkan nama makanan untuk mengetahui informasi nutrisinya berdasarkan data dari USDA.</div>", unsafe_allow_html=True)
 
 # Input makanan
-query = st.text_input("Masukkan nama makanan (dalam Bahasa Inggris)", "apple")
+query = st.text_input("Masukkan nama makanan (gunakan Bahasa Inggris)", "apple")
 
-if st.button("Cari Nutrisi"):
+if st.button("Cari Informasi Nutrisi"):
     with st.spinner("Mengambil data dari USDA..."):
         params = {
             "api_key": API_KEY,
@@ -69,9 +69,13 @@ if st.button("Cari Nutrisi"):
                 st.dataframe(df)
 
                 # Visualisasi
-                st.subheader("Visualisasi Nutrisi 📊")
+                st.subheader("Visualisasi Informasi Nutrisi 📊")
                 st.bar_chart(df)
             else:
                 st.warning("Makanan tidak ditemukan di database USDA.")
         else:
-            st.error("Terjadi kesalahan saat mengambil data. Coba lagi nanti.")
+            st.error("Terjadi kesalahan saat mengambil data. Silakan coba lagi nanti.")
+
+# Footer
+st.markdown("---")
+st.markdown("Dibuat dengan ❤️ menggunakan Streamlit dan API USDA")
