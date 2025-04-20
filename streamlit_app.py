@@ -1,3 +1,7 @@
+import streamlit as st
+import matplotlib.pyplot as plt
+
+# Judul Halaman
 st.title("🍽️ Analisis Nutrisi Makanan")
 st.write("Pilih makanan untuk melihat informasi gizinya (kalori, karbohidrat, protein, dan gula).")
 
@@ -25,16 +29,14 @@ if makanan_dipilih:
     st.metric("Protein (g)", gizi["Protein"])
     st.metric("Gula (g)", gizi["Gula"])
 
-    # Visualisasi pie chart
-    st.subheader("🍥 Komposisi Gizi")
-    st.pyplot(
-        figure=__import__('matplotlib.pyplot').pie(
-            [gizi["Karbohidrat"], gizi["Protein"], gizi["Gula"]],
-            labels=["Karbohidrat", "Protein", "Gula"],
-            autopct="%1.1f%%",
-            startangle=140
-        )[0].figure
-    )
+    # Pie Chart
+    st.subheader("🍥 Komposisi Gizi (Karbohidrat, Protein, Gula)")
+    fig, ax = plt.subplots()
+    labels = ['Karbohidrat', 'Protein', 'Gula']
+    sizes = [gizi["Karbohidrat"], gizi["Protein"], gizi["Gula"]]
+    ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+    ax.axis('equal')  # Biar pie chart-nya bulat
+    st.pyplot(fig)
 
 # Footer
 st.markdown("---")
